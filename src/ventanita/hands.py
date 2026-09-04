@@ -45,3 +45,11 @@ def type_and_send(text, input_pos, think_delay, type_jitter):
 
     pyautogui.press("enter")
     return True
+
+
+def close_chat():
+    """Deselect the open chat back to the list view. Leaving a chat open makes
+    WhatsApp Web not mark that customer's next messages as unread, so the
+    badge-scan trigger would never see them -- confirmed live: a customer's
+    follow-ups sat unanswered because the chat stayed open after we replied."""
+    pyautogui.press("esc")

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.1
+Two more real bugs found live, same session:
+
+- **Unread-badge x-position isn't fixed.** WhatsApp shifts the badge ~22px
+  left on whatever row shows the extra dropdown-chevron affordance -- which
+  is exactly the freshly-bumped-to-top row that matters most. A single-pixel
+  x-column scan skipped right past it and picked up a lower, unrelated
+  chat's badge instead. Now scans a small x-band (`unread_badge_x_range`).
+- **A customer's follow-ups went unanswered.** Confirmed live: after
+  replying, the bot left the chat open. WhatsApp Web doesn't mark messages
+  unread in a chat that's currently open, so the customer's next 3 messages
+  never tripped the badge trigger at all. `hands.close_chat()` now returns
+  to the list view after every send (skipped only on a kill-switch abort,
+  so a human intervening manually keeps window focus).
+
+Known limitation, not yet fixed: detection is still one-row-at-a-time and
+assumes messages arrive with enough gap to process serially. Several chats
+going unread within the same detection window is unhandled. Concept and
+approach still being worked out before building it.
+
 ## 0.2
 Verified end-to-end against a real, live WhatsApp Business account (isolated
 virtual display, linked as an extra device -- never touches the real desktop

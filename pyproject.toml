@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ventanita"
-version = "0.2.0"
+version = "0.2.1"
 description = "A while-loop that watches WhatsApp and takes orders. Not a platform."
 readme = "README.md"
 requires-python = ">=3.11"

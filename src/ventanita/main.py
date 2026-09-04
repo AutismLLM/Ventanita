@@ -79,6 +79,15 @@ def run():
             )
             ok, reason = gate.should_send(reply_text, msg, config)
 
+            # reader.last_messages() already opened this chat to read it.
+            # Leaving it open makes WhatsApp Web stop marking this customer's
+            # NEXT messages as unread, so the badge-scan trigger would never
+            # see them -- confirmed live: a customer's follow-ups sat
+            # unanswered because the chat stayed open after we replied. So
+            # close it before returning to the loop, in every case except a
+            # kill-switch abort (a human is likely intervening manually then;
+            # don't fight them for window focus).
+            sent = False
             if ok:
                 sent = hands.type_and_send(
                     reply_text,
@@ -95,6 +104,10 @@ def run():
                     log.warning("Kill switch aborted send to %s", msg.number)
             else:
                 log.info("Flagged, not sent (%s): %s", reason, reply_text)
+
+            killswitch_aborted = ok and not sent
+            if not killswitch_aborted:
+                hands.close_chat()
 
             time.sleep(_jittered_pause(timing["post_send_pause"]))
 
