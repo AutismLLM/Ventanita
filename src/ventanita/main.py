@@ -1,6 +1,7 @@
 """main.py — the loop. badge goes up -> click chat -> read text -> think -> type reply -> loop."""
 import logging
 import logging.handlers
+import os
 import time
 from datetime import datetime
 
@@ -41,7 +42,9 @@ def run():
     win = config["window"]
     timing = config["timing"]
 
-    log.info("Ventanita started.")
+    log.info("=" * 50)
+    log.info("Ventanita (RE)STARTED -- pid=%s", os.getpid())
+    log.info("=" * 50)
     print("Ventanita running. Kill switch: %s" % config["safety"]["killswitch_key"])
 
     while True:
