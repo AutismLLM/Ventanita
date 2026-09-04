@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 
 import yaml
+from dotenv import load_dotenv
 
 import db
 import trigger
@@ -27,6 +28,7 @@ def in_active_hours(active_hours):
 
 
 def run():
+    load_dotenv(override=True)
     config = load_config()
     logging.basicConfig(
         filename=config["paths"]["log"],
@@ -58,7 +60,7 @@ def run():
             history = db.recent_orders(conn, msg.number)
             menu = db.active_menu(conn)
 
-            reply_text = brain.reply(msg.text, history, menu)
+            reply_text = brain.reply(msg.text, history, menu, config["llm"])
             ok, reason = gate.should_send(reply_text, msg, config)
 
             if ok:

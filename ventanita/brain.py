@@ -22,11 +22,14 @@ def _build_prompt(message, customer_ctx, menu):
     )
 
 
-def reply(message, customer_ctx, menu):
-    provider = os.environ.get("VENTANITA_LLM_PROVIDER", "openai")
-    api_key = os.environ.get("OPENAI_API_KEY" if provider == "openai" else "ANTHROPIC_API_KEY")
+def reply(message, customer_ctx, menu, llm_config=None):
+    llm_config = llm_config or {}
+    provider = llm_config.get("provider", os.environ.get("VENTANITA_LLM_PROVIDER", "openai"))
+    model = llm_config.get("model", os.environ.get("VENTANITA_LLM_MODEL", "gpt-5.6-terra"))
+    api_key_env = llm_config.get("api_key_env", "OPENAI_API_KEY" if provider == "openai" else "ANTHROPIC_API_KEY")
+    api_key = os.environ.get(api_key_env)
     if not api_key:
-        raise RuntimeError("Missing LLM API key in environment")
+        raise RuntimeError(f"Missing LLM API key: expected env var {api_key_env}")
 
     prompt = _build_prompt(message, customer_ctx, menu)
 
@@ -35,12 +38,12 @@ def reply(message, customer_ctx, menu):
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}"},
             json={
-                "model": os.environ.get("VENTANITA_LLM_MODEL", "gpt-4o-mini"),
+                "model": model,
                 "messages": [
                     {"role": "system", "content": _SYSTEM_PROMPT},
                     {"role": "user", "content": prompt},
                 ],
-                "max_tokens": 200,
+                "max_completion_tokens": 200,
             },
             timeout=20,
         )

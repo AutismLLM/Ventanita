@@ -11,8 +11,9 @@ timing:
   active_hours: [8, 22]           # sleep outside this
 llm:
   provider: openai                # or anthropic / local
-  model: gpt-4o-mini
-  api_key_env: OPENAI_API_KEY
+  model: gpt-5.6-terra             # balanced tier: catches menu mismatches, doesn't guess.
+                                    # gpt-5.6-luna = cheaper/faster if volume gets high; sol = overkill for taco orders.
+  api_key_env: OPENAI_API_KEY      # actual key lives in .env, never in this file or git
 paths:
   db: ./ventanita.db
   menu: ./menu.txt

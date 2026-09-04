@@ -4,3 +4,4 @@ pyautogui
 pyyaml
 requests
 keyboard
+python-dotenv
