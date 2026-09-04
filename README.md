@@ -100,6 +100,14 @@ The delta between these two columns is not technology. The delta is rent extract
 
 ---
 
+STATUS (v0.2.4, live-tested against a real WhatsApp account)
+
+Working right now: reads any number of chats going unread at once (not just one at a time), remembers who you are across a conversation and gives a compressed one-line summary once a session goes quiet for a few hours instead of replaying the whole history forever, waits for a customer to actually finish typing before answering, tracks order status and which payment method settled an order, and won't reply twice to the same message if OCR re-reads a screen that hasn't changed.
+
+Not built yet, see CHANGELOG.md and docs/ for what's actually in progress: automatic payment links, voice/photo understanding, spoken replies, a supervision dashboard. Read the CHANGELOG before believing any specific claim about what version does what — this README describes the philosophy, the changelog describes the facts.
+
+---
+
 ARCHITECTURE
 
 YOUR MONITOR
@@ -128,11 +136,12 @@ There is no diagram after this one. We considered adding more boxes to look impr
 
 THE DATABASE
 
-CREATE TABLE customers (number TEXT, name TEXT, first_seen TEXT, notes TEXT);
-CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT, items TEXT, status TEXT, ts TEXT);
+CREATE TABLE customers (number TEXT, name TEXT, first_seen TEXT, notes TEXT, notes_ts TEXT, preferred_payment TEXT);
+CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT, items TEXT, status TEXT, ts TEXT, payment_method TEXT);
+CREATE TABLE messages (id INTEGER PRIMARY KEY, customer TEXT, role TEXT, content TEXT, ts TEXT);
 CREATE TABLE menu (item TEXT, price REAL, available INTEGER);
 
-Three tables. That's the schema.
+Four tables now (added `messages` for real per-chat conversation memory, plus a few columns for order status and payment tracking). Still SQLite, still no migration framework — new columns arrive via a guarded `ALTER TABLE` on startup, same file, same schema-in-one-glance philosophy.
 
 A food stall needs memory, not a data warehouse. If you're reaching for Prisma, Drizzle, TypeORM, or — god forbid — a graph database to store "Juan ordered 2 al pastor," you are not solving a customer's problem. You are solving your resume's problem.
 
