@@ -1,0 +1,8 @@
+# item,price
+Al pastor,25
+Suadero,25
+Bistec,28
+Chorizo,25
+Campechano,30
+Agua de horchata,15
+Refresco,20

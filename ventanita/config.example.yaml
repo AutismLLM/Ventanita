@@ -1,0 +1,23 @@
+window:
+  region: [0, 0, 800, 600]        # chat area rectangle, from calibrate.py
+  badge_corner: [0, 0, 20, 20]    # tiny unread-badge crop
+  input_pos: [400, 590]           # click point for input field
+  chat_list_row: [100, 100, 300, 60]  # row to click when badge appears
+timing:
+  check_interval_sec: 5
+  think_delay: [3, 15]            # random range before reply
+  type_jitter: [0.03, 0.12]       # per-char delay
+  post_send_pause: [10, 60]
+  active_hours: [8, 22]           # sleep outside this
+llm:
+  provider: openai                # or anthropic / local
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+paths:
+  db: ./ventanita.db
+  menu: ./menu.txt
+  log: ./ventanita.log
+safety:
+  max_reply_chars: 320
+  confirm_above_mxn: 500           # human gate threshold
+  killswitch_key: f9

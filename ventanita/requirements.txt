@@ -1,0 +1,6 @@
+mss
+pytesseract
+pyautogui
+pyyaml
+requests
+keyboard
