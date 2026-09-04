@@ -15,6 +15,28 @@ _QTY_ITEM_RE = re.compile(
 
 
 _CONTEXT_LINES = 8
+_SLUG_RE = re.compile(r"[^a-z0-9]+")
+
+
+def identity_from_label(row_label):
+    """Turn an OCR'd chat-list row ("Nico  10:32 PM\nhola...") into
+    (name, key) for the DB.
+
+    OCR gives us a display name, never a phone number, so the name is the
+    best stable-ish identity we have: `name` is the first non-empty line
+    with any timestamp stripped, `key` is that lowercased/slugified so
+    "Nico" and "nico " land on the same customers/orders/messages rows.
+    Known limitation: two contacts with the same display name, or an OCR
+    misread of the name, will share/split a record. Good enough for a
+    taco stand; not worth a fuzzy-matching layer.
+    """
+    for line in row_label.splitlines():
+        name = _TIMESTAMP_RE.sub("", line).strip()
+        if name:
+            key = _SLUG_RE.sub("-", name.lower()).strip("-")
+            if key:
+                return name, key
+    return "unknown", "unknown"
 
 
 @dataclass

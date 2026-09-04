@@ -106,9 +106,9 @@ YOUR MONITOR
 
 Brand A WhatsApp | Brand B WhatsApp | Brand C WhatsApp
 
-THE SCRIPT (nine modules, one file each)
+THE SCRIPT (eight modules, one file each)
 
-1. Badge > 0? — trigger.py
+1. Any unread rows? — reader.py
 2. Click + scroll — reader.py
 3. OCR last message — reader.py
 4. Clean + structure — parser.py

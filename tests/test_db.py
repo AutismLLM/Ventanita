@@ -49,3 +49,26 @@ def test_recent_messages_respects_limit():
 
     turns = db.recent_messages(conn, "123", n=2)
     assert [content for _role, content in turns] == ["msg3", "msg4"]
+
+
+def test_last_user_message_is_the_latest_inbound_line():
+    conn = db.connect(":memory:")
+    assert db.last_user_message(conn, "nico") is None
+
+    db.add_message(conn, "nico", "user", "hola")
+    db.add_message(conn, "nico", "assistant", "qué onda")
+    db.add_message(conn, "nico", "user", "2 al pastor")
+    db.add_message(conn, "nico", "assistant", "van")
+    db.add_message(conn, "lupe", "user", "3 suadero")
+
+    assert db.last_user_message(conn, "nico") == "2 al pastor"
+    assert db.last_user_message(conn, "lupe") == "3 suadero"
+
+
+def test_dedup_skips_identical_reread_but_not_new_text():
+    # The check main._handle_chat makes before spending an LLM call.
+    conn = db.connect(":memory:")
+    db.add_message(conn, "nico", "user", "2 al pastor")
+    assert "2 al pastor" == db.last_user_message(conn, "nico")       # re-read: skip
+    assert "3 al pastor" != db.last_user_message(conn, "nico")       # new line: answer
+    assert "2 al pastor" != db.last_user_message(conn, "lupe")       # other chat: answer

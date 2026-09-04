@@ -1,6 +1,6 @@
 window:
   region: [0, 0, 800, 600]        # chat area rectangle, from calibrate.py
-  badge_corner: [0, 0, 20, 20]    # tiny unread-badge crop
+  badge_corner: [0, 0, 20, 20]    # tiny unread-badge crop (unused since 0.2.2; the row scan below is the trigger now)
   input_pos: [400, 590]           # click point for input field
   chat_list_row: [100, 100, 300, 60]  # fallback row if no badge detected
   unread_badge_x_range: [0, 40]      # x-band where the green unread dot appears, from calibrate.py
@@ -9,7 +9,7 @@ timing:
   check_interval_sec: 5
   think_delay: [3, 15]            # random range before reply
   type_jitter: [0.03, 0.12]       # per-char delay
-  post_send_pause: [10, 60]
+  post_send_pause: [10, 60]       # once per drain (after the whole batch), not per chat
   active_hours: [8, 22]           # sleep outside this
 llm:
   provider: openai                # or anthropic / local
@@ -25,3 +25,4 @@ safety:
   confirm_above_mxn: 500           # human gate threshold
   killswitch_key: f9
   allowed_chats: []                 # e.g. ["Nico"] to restrict replies to matching chats during testing. Empty = reply to any unread chat.
+  max_chats_per_drain: 4            # most chats opened in one pass before sleeping; a bigger burst waits for the next cycle. Omit = 4.

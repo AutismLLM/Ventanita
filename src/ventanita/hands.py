@@ -25,6 +25,12 @@ def arm_killswitch(key="f9"):
     _listener.start()
 
 
+def killed():
+    """True once the kill switch has been pressed. It never resets -- a
+    restart is the only way back, on purpose."""
+    return _kill_flag.is_set()
+
+
 def type_and_send(text, input_pos, think_delay, type_jitter):
     time.sleep(random.uniform(*think_delay))
     if _kill_flag.is_set():

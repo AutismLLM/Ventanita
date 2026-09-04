@@ -79,6 +79,17 @@ def recent_messages(conn, customer, n=20):
     return list(reversed(rows))
 
 
+def last_user_message(conn, customer):
+    """Content of this customer's most recent inbound line, or None.
+    Used to skip re-answering a chat when OCR re-reads the same text."""
+    row = conn.execute(
+        "SELECT content FROM messages WHERE customer = ? AND role = 'user' "
+        "ORDER BY ts DESC, id DESC LIMIT 1",
+        (customer,),
+    ).fetchone()
+    return row[0] if row else None
+
+
 def recent_orders(conn, number, n=3):
     return conn.execute(
         "SELECT items, status, ts FROM orders WHERE customer = ? ORDER BY ts DESC LIMIT ?",

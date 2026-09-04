@@ -23,6 +23,16 @@ def should_send(reply_text, msg, config, now_hour=None):
     return True, "ok"
 
 
+def chat_allowed(row_label, allowed_chats):
+    """Allowlist check on an OCR'd chat-list row. Empty/missing allowlist
+    means every chat is fair game (production); otherwise case-insensitive
+    substring match against the row text (testing)."""
+    if not allowed_chats:
+        return True
+    label = row_label.lower()
+    return any(name.lower() in label for name in allowed_chats)
+
+
 def _extract_total(text):
     import re
 

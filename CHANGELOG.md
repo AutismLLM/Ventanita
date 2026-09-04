@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.2.2
+Builds out the "known limitation" left open in 0.2.1. Unlike 0.2/0.2.1
+these were not caught misbehaving live; they came from a research pass
+over the code between test sessions. Treat them as designed-in-the-quiet
+until the next live run says otherwise.
+
+- **Drains every unread chat, not just the topmost.** `reader.find_unread_rows()`
+  now returns the y of every unread badge visible in the list (pixel hits
+  are clustered by `chat_list_row` height so one ~20px badge is one row,
+  not twenty). `main.drain_unread()` opens the topmost allowed one, replies
+  or skips, closes it, then **rescans from scratch** before touching the
+  next -- opening/closing a chat and our own sent reply both reorder the
+  list, so no y-coordinate is ever reused across a click.
+- **Dropped the "Unread N" pill trigger (`trigger.py` deleted).** It only
+  fired when the count *changed*, so one chat resolving as another arrived
+  (net count unchanged, set of unread chats changed) would stall the loop.
+  The row scan already answers "is anything unread right now" directly and
+  is strictly at least as correct (if the pill said N>0 but no badge was on
+  screen there was nothing we could open anyway), so the pill was redundant.
+  `window.badge_corner` stays in config (calibrate.py still writes it) but
+  nothing reads it.
+- **Allowlist no longer blocks chats below a disallowed row.** Previously a
+  disallowed unread chat at the top of the list made the whole cycle bail
+  out, so an allowed chat under it never got checked. Now disallowed rows
+  are logged and skipped and the scan keeps going down the list.
+- **Per-drain cap and pause placement.** New `safety.max_chats_per_drain`
+  (default 4, works without the key) bounds one pass; overflow waits for
+  the next cycle. `timing.post_send_pause` now runs once after the batch
+  instead of after every chat: each reply already carries its own
+  `think_delay` plus real typing time, and stacking a 10-60s pause between
+  four people on top of that turned a burst into a multi-minute queue.
+- **Fixed every chat sharing one customer record.** `main.py` was calling
+  `parser.clean(..., number="self-chat", name="self")` for every
+  conversation, so all customers' orders and message history collapsed into
+  one SQLite row and the LLM saw everyone's turns as one person. The OCR'd
+  row label is now the identity (`parser.identity_from_label`: display name
+  as `name`, slugified as the key). OCR never yields a phone number, so the
+  display name is the best stable-ish key available; same-named contacts
+  or a misread name will share/split a record -- documented, not solved.
+- **Per-chat dedup.** Before spending an LLM call, the latest inbound line
+  is compared to `db.last_user_message()` for that chat; an identical
+  re-read is closed without a reply. Also skips chats where OCR read nothing.
+- Drain stops opening chats once the kill switch is down (sends are refused
+  after F9 until restart, so opening more would only mark them read
+  unanswered).
+
 ## 0.2.1
 Two more real bugs found live, same session:
 
