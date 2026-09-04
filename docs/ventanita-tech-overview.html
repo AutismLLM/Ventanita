@@ -1,156 +1,426 @@
-<title>Ventanita Tech Overview</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ventanita — Product Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@400;600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  @page { size: A4; margin: 18mm 16mm; }
-  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body {
-    background: #ffffff;
-    color: #1a1a1a;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 10.5pt;
-    line-height: 1.5;
-    max-width: 46em;
-    margin: 0 auto;
+  :root{
+    --ink:#211c17;
+    --ink-soft:#6d6154;
+    --paper:#f4ecdd;
+    --paper-raised:#fffcf5;
+    --salsa:#b93a24;
+    --verde:#556b3a;
+    --steel:#3c4a52;
+    --rule:#d8cbb2;
+    --rule-strong:#c3b393;
   }
-  h1 {
-    font-size: 20pt;
-    margin: 0 0 2px 0;
-    letter-spacing: 0.5px;
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Public Sans",-apple-system,"Segoe UI",sans-serif;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
   }
-  .sub { color: #555; font-size: 10pt; margin: 0 0 4px 0; }
-  .meta {
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 8.5pt;
-    color: #666;
-    border-bottom: 1.5px solid #1a1a1a;
-    padding-bottom: 10px;
-    margin-bottom: 18px;
+  .page{
+    width:816px;
+    height:1056px;
+    margin:0 auto;
+    padding:50px 68px 84px;
+    position:relative;
+    background:var(--paper);
+    overflow:hidden;
   }
-  h2 {
-    font-size: 13pt;
-    margin: 22px 0 8px 0;
-    padding-bottom: 3px;
-    border-bottom: 1px solid #bbb;
+  .page + .page{ break-before:page; }
+
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--steel);
   }
-  h3 { font-size: 10.5pt; margin: 14px 0 4px 0; }
-  p { margin: 0 0 8px 0; }
-  ul { margin: 0 0 8px 0; padding-left: 1.1em; }
-  li { margin-bottom: 5px; }
-  code, .mono {
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 9pt;
+  h1,h2,h3{
+    font-family:"Big Shoulders",sans-serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
   }
-  .flow {
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 9pt;
-    background: #f4f4f2;
-    border-left: 3px solid #999;
-    padding: 8px 10px;
-    margin: 10px 0 12px 0;
+  p{ margin:0; }
+  .rule{ height:1px; background:var(--rule); border:0; margin:0; }
+  .rule-strong{ height:2px; background:var(--ink); border:0; }
+
+  /* ---------- MASTHEAD ---------- */
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding-bottom:22px;
+    border-bottom:3px solid var(--ink);
   }
-  .roadmap {
-    border: 1.5px solid #1a1a1a;
-    padding: 12px 14px 6px 14px;
-    margin-top: 6px;
-    background: #fbfaf7;
+  .masthead .brand{
+    font-size:88px;
+    font-weight:800;
+    letter-spacing:.01em;
+    line-height:.85;
+    color:var(--salsa);
   }
-  .stamp {
-    display: inline-block;
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 8.5pt;
-    letter-spacing: 1px;
-    border: 1.5px solid #1a1a1a;
-    padding: 2px 7px;
-    margin-bottom: 8px;
+  .masthead .brand sub{
+    display:block;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:13px;
+    font-weight:500;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--steel);
+    margin-top:10px;
   }
-  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6px 0 10px 0; }
-  th, td { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid #ddd; vertical-align: top; }
-  th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
-  .foot {
-    margin-top: 22px;
-    padding-top: 8px;
-    border-top: 1px solid #bbb;
-    font-size: 9pt;
-    color: #555;
+  .masthead .meta{
+    text-align:right;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    line-height:1.7;
   }
-  .avoid-break { break-inside: avoid; }
+
+  .thesis{
+    margin-top:20px;
+    font-family:"Public Sans",sans-serif;
+    font-weight:600;
+    font-size:22px;
+    line-height:1.38;
+    max-width:600px;
+    color:var(--ink);
+  }
+  .thesis em{
+    font-style:normal;
+    color:var(--salsa);
+  }
+
+  /* ---------- LOOP STRIP ---------- */
+  .loop{
+    margin-top:26px;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--rule-strong);
+    border-bottom:1px solid var(--rule-strong);
+  }
+  .loop-step{
+    padding:12px 14px 14px;
+    border-right:1px solid var(--rule);
+  }
+  .loop-step:last-child{ border-right:0; }
+  .loop-num{
+    font-family:"Big Shoulders",sans-serif;
+    font-size:30px;
+    font-weight:700;
+    color:var(--rule-strong);
+    line-height:1;
+  }
+  .loop-label{
+    margin-top:8px;
+    font-weight:600;
+    font-size:13.5px;
+    line-height:1.3;
+  }
+  .loop-sub{
+    margin-top:4px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
+
+  /* ---------- SECTION LABEL ---------- */
+  .section{ margin-top:26px; }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .section-head .tag{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--paper-raised);
+    background:var(--ink);
+    padding:3px 8px;
+  }
+  .section-head h2{
+    font-size:26px;
+    font-weight:700;
+  }
+
+  /* ---------- FEATURE LEDGER ---------- */
+  .ledger{ display:flex; flex-direction:column; }
+  .ledger-row{
+    display:grid;
+    grid-template-columns:150px 1fr;
+    gap:22px;
+    padding:10px 0;
+    border-top:1px solid var(--rule);
+  }
+  .ledger-row:last-child{ border-bottom:1px solid var(--rule); }
+  .ledger-key{
+    font-weight:700;
+    font-size:14.5px;
+    line-height:1.35;
+  }
+  .ledger-key .dot{
+    display:inline-block;
+    width:7px; height:7px;
+    border-radius:50%;
+    margin-right:7px;
+    position:relative;
+    top:-1px;
+  }
+  .dot.salsa{ background:var(--salsa); }
+  .dot.verde{ background:var(--verde); }
+  .ledger-desc{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .ledger-desc b{ color:var(--ink); }
+  .ledger-desc .soft{ color:var(--ink-soft); }
+
+  /* ---------- TWO COL ---------- */
+  .twocol{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:36px;
+  }
+
+  /* ---------- SPEC TABLE ---------- */
+  .spec{ width:100%; border-collapse:collapse; font-size:13px; }
+  .spec tr{ border-top:1px solid var(--rule); }
+  .spec tr:last-child{ border-bottom:1px solid var(--rule); }
+  .spec td{ padding:10px 0; vertical-align:top; }
+  .spec td.k{
+    width:190px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--steel);
+    letter-spacing:.02em;
+    padding-right:16px;
+  }
+  .spec td.v{ color:var(--ink); line-height:1.5; }
+
+  /* ---------- FOOTER ---------- */
+  .footer{
+    position:absolute;
+    left:68px; right:68px; bottom:40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:14px;
+    border-top:1px solid var(--rule-strong);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    letter-spacing:.03em;
+  }
+  .footer .pg{ font-weight:500; color:var(--ink); }
+
+  .cap{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:.02em;
+    margin-top:10px;
+    line-height:1.5;
+  }
 </style>
+</head>
+<body>
 
-<h1>Ventanita</h1>
-<p class="sub">A WhatsApp order-taking bot for a small food business. No official API, no framework, no vendor.</p>
-<p class="meta">Technical overview &middot; v0.2.4 &middot; What is shipped, and where it is going</p>
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+  <div class="masthead">
+    <div class="brand">VENTANITA<sub>WhatsApp order automation</sub></div>
+    <div class="meta">
+      PRODUCT OVERVIEW<br>
+      v3 — SEPTEMBER 2026<br>
+      AUTISMLLM
+    </div>
+  </div>
 
-<h2>1. What it is</h2>
+  <div class="thesis">
+    Ventanita answers your phone the way a good counter person would —
+    <em>in your own voice</em>, on the WhatsApp number your customers already
+    have saved, running on a computer you own instead of a platform that
+    bills you per conversation.
+  </div>
 
-<p>Ventanita is a Python program that watches a WhatsApp Web browser window on a machine you own, reads it with OCR, and types replies back with real keystrokes. It is not an integration. It does not talk to Meta's Business API, does not register templates, and does not pay per message. It uses the same door a human uses: a linked browser session, a screen, and a keyboard.</p>
+  <div class="loop">
+    <div class="loop-step">
+      <div class="loop-num">01</div>
+      <div class="loop-label">Watches</div>
+      <div class="loop-sub">Reads the chat list the way a person glancing at their phone would — text, photo, or voice note.</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">02</div>
+      <div class="loop-label">Understands</div>
+      <div class="loop-sub">Order, question, or complaint — placed in the context of who's asking and what they usually get.</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">03</div>
+      <div class="loop-label">Answers</div>
+      <div class="loop-sub">Typed or spoken, in the stand's own voice, at the pace of someone actually mid-shift.</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">04</div>
+      <div class="loop-label">Charges</div>
+      <div class="loop-sub">Sends a Mercado Pago link for the order total and keeps the ticket open until it clears.</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">05</div>
+      <div class="loop-label">Confirms</div>
+      <div class="loop-sub">The moment the payment lands, the right customer — by name, not by luck — hears the order is on.</div>
+    </div>
+  </div>
 
-<div class="flow">unread badge &rarr; open chat &rarr; OCR &rarr; clean &rarr; look up customer &rarr; ask LLM &rarr; gate &rarr; type &rarr; close chat &rarr; loop</div>
+  <div class="section">
+    <div class="section-head">
+      <span class="tag">Front of house</span>
+      <h2>What the customer experiences</h2>
+    </div>
+    <div class="ledger">
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot salsa"></span>One number, always on</div>
+        <div class="ledger-desc">No app to download, no bot menu to navigate, no "reply 1 for pastor, 2 for suadero." Customers text the stand exactly like they'd text a friend, and get answered <b>in Mexican Spanish</b> — chilango slang, not customer-service copy.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot verde"></span>Remembers regulars</div>
+        <div class="ledger-desc">Every conversation adds to a running note on that customer — what they order, how they like it, whether they always ask for extra salsa. The note travels with them across visits without replaying the whole chat history every time.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot salsa"></span>Hears, sees, and talks back</div>
+        <div class="ledger-desc">A voice note saying "dos de pastor, uno sin cebolla" or a photo of a handwritten office lunch list works the same as typed text — and a reply can be spoken back, useful mid-rush and for regulars who'd rather listen than read.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot verde"></span>Pays without leaving the chat</div>
+        <div class="ledger-desc">A Mercado Pago link lands in the same thread as the order. Card, transfer, or wallet — whatever the customer already has set up.</div>
+      </div>
+    </div>
+  </div>
 
-<p>That is the whole architecture. Eight small modules, one job each, under <code>src/ventanita/</code>. The LLM is the only stochastic part; everything around it is if/then, so a wrong answer is traceable to one variable.</p>
-
-<h3>Shipped through v0.2.4</h3>
-<ul>
-  <li><strong>Screen-driven detection.</strong> The chat list is scanned for WhatsApp's unread-badge green. Badge position is not fixed &mdash; it shifts a couple of dozen pixels on the row showing the dropdown chevron &mdash; so the scan covers an x-band, not one column.</li>
-  <li><strong>Drain loop for concurrent chats.</strong> Every visible unread row is found, not just the topmost. The bot opens one, replies or skips, closes it, then rescans from scratch before touching the next, because sending a message reorders the list and invalidates every y-coordinate. Bounded per pass by <code>safety.max_chats_per_drain</code> (default 4).</li>
-  <li><strong>Real per-chat multi-turn memory.</strong> A <code>messages</code> table stores each customer's turns; they are replayed to the model as a proper messages array. Verified live on a follow-up question that only made sense with prior context.</li>
-  <li><strong>Session-summary memory.</strong> Replaying full history forever gets expensive and stale. After a quiet gap (<code>timing.session_gap_hours</code>, default 3), the turns since the last note are folded into a short written note (capped at 600 characters) by one cheap model call, and that note accumulates rather than being overwritten. New replies then see the current session's turns plus the note. No cron, no background thread &mdash; it is a check at the top of the existing per-chat path.</li>
-  <li><strong>Typing-aware debounce.</strong> If the chat row reads "typing" / "escribiendo" after the chat is opened, the bot waits (up to <code>timing.typing_wait_sec</code>, default 15) and re-reads, so it answers the finished thought instead of half a sentence.</li>
-  <li><strong>Per-chat identity and dedup.</strong> The OCR'd row label is the customer key, so histories no longer collapse into one record. Before spending an LLM call, the latest inbound line is compared against the last stored one; an unchanged re-read is closed without a reply.</li>
-  <li><strong>Orders and payment status in SQLite.</strong> Four tables in one file. <code>orders.status</code> has a fixed vocabulary (<code>new &rarr; preparing &rarr; ready &rarr; paid</code>, plus <code>cancelled</code>) enforced at the write, so typos cannot invent a fifth state. Orders record how they were paid; customers record a preferred method. Migrations are guarded <code>ALTER TABLE</code> statements on connect &mdash; additive only, no migration framework.</li>
-  <li><strong>Chilango-Spanish persona.</strong> Voice comes from the config-supplied system prompt, so per-brand is per-config file.</li>
-  <li><strong>Safety rails.</strong> F9 kill switch (X11 hooks, no root needed) aborts typing mid-message and refuses further sends until restart. A human gate holds orders above a configured peso threshold instead of confirming them. Active-hours sleep, randomized think delays, per-character typing jitter, and a chat allowlist. Failures log loudly rather than passing silently.</li>
-</ul>
-
-<h3>What it runs on</h3>
-<table>
-  <tr><th>Layer</th><th>Choice</th></tr>
-  <tr><td>Language</td><td>Python 3.11+</td></tr>
-  <tr><td>Screen capture / OCR</td><td><code>mss</code> + Tesseract via <code>pytesseract</code> (Spanish pack)</td></tr>
-  <tr><td>Input</td><td><code>pyautogui</code> for clicks, <code>xdotool type</code> for text (pyautogui mangles accents on X11)</td></tr>
-  <tr><td>Storage</td><td><code>sqlite3</code>, stdlib, one file</td></tr>
-  <tr><td>Model</td><td>One HTTP call behind one function &mdash; swap the provider without touching anything else</td></tr>
-  <tr><td>Config</td><td><code>config.yaml</code> plus <code>.env</code> for keys</td></tr>
-</table>
-
-<p>Setup is an afternoon: install Tesseract, <code>pip install -e .</code>, run the calibration helper once with the WhatsApp window pinned, start the loop. Running cost is cents a day in tokens. Everything &mdash; customers, orders, message history &mdash; lives in one file on the operator's disk.</p>
-
-<h3>Known limits, stated plainly</h3>
-<ul>
-  <li>OCR never yields a phone number, so the display name is the identity key. Two contacts with the same name share a record; a misread name splits one. Documented, not solved.</li>
-  <li>The window must stay pinned at a fixed position, size, and zoom. If it moves, recalibrate.</li>
-  <li>The typing-wait is synchronous, so a burst of chats can queue behind each other. Accepted tradeoff for a single-window bot.</li>
-  <li>Nothing in the OCR loop can observe that a payment happened. Payment fields exist and are written by hand or by an operator command &mdash; there is no gateway code.</li>
-  <li>The 0.2.2&ndash;0.2.4 work came from a research pass between live sessions, not from watching it misbehave. Treat those defaults as first guesses until the next real run says otherwise.</li>
-</ul>
-
-<h2>2. Where it is going</h2>
-
-<div class="roadmap">
-<span class="stamp">ROADMAP &mdash; NOT BUILT</span>
-
-<p>Nothing in this section exists in the code today. These are directions, not commitments, and none of them has a date. The project's rule has been to build the atom first and leave the seams: a feature ships when a real kitchen has hit the edge case, not when it sounds good on a page. Read section 1 for what actually runs.</p>
-
-<h3 class="avoid-break">Payment links that close the loop</h3>
-<p>Generate a Mercado Pago link for an order, attach it to that order row, and route the confirmation back to the right customer's chat when it settles. The naming is already in place &mdash; <code>mercado_pago</code> is one of the recorded payment methods today &mdash; so hand-entered rows keep the same label a real integration would use. The hard part is not the link. It is the return path: a webhook or poller has to identify which chat to notify, and the bot's only handle on a customer is an OCR'd display name. That identity problem is upstream of the payment work.</p>
-
-<h3 class="avoid-break">Understanding voice notes and photos</h3>
-<p>Customers send audio and pictures, not only typed text. Today OCR sees a bubble it cannot read, and the bot has nothing to say about it. The intended shape is transcription for audio and a small vision model on call for images &mdash; invoked only when the message is not plain text, feeding a description into the same prompt path that already exists, rather than becoming a second pipeline.</p>
-
-<h3 class="avoid-break">Spoken replies</h3>
-<p>Answering a voice note with a voice note. Mechanically this is text-to-speech plus WhatsApp Web's attachment flow driven the same way typing is driven now. Open question is whether a synthetic voice is the right thing to put in front of a customer at all; that gets decided by trying it in the sandbox chat, not by arguing about it.</p>
-
-<h3 class="avoid-break">Local model or rented model, operator's choice</h3>
-<p>The model already sits behind one function, which was the point. The direction is making a fully local model a first-class option &mdash; on-machine inference, no cloud dependency, no key, no per-token bill &mdash; while keeping pay-per-use against a cloud provider for operators who would rather rent quality than run hardware. Same code path, one config line. The brain is rented on purpose so it can stop being rented.</p>
-
-<h3 class="avoid-break">Supervision console</h3>
-<p>A read-mostly view of chats, orders, and payment status, and the place a human marks an order paid or ready. This is the intended caller for the payment helpers that already exist in the database layer but have no trigger. Design notes only so far.</p>
+  <div class="footer">
+    <span>VENTANITA — PRODUCT OVERVIEW</span>
+    <span class="pg">1 / 3</span>
+    <span>AUTISMLLM</span>
+  </div>
 </div>
 
-<h2>3. Why it is built this way</h2>
-<ul>
-  <li><strong>Boring tech owns its failures.</strong> OCR, SQLite, and mouse events have twenty years of known failure modes. When they break, you fix it yourself in four minutes. Cloud APIs break on someone else's schedule.</li>
-  <li><strong>Freeze the world.</strong> Pinned window, fixed resolution, dark mode, 100% zoom. Perception becomes data entry instead of computer vision. Make the environment dumber rather than the model smarter.</li>
-  <li><strong>The AI is a part, not the product.</strong> One replaceable component inside a deterministic box. The stochastic thing touches the reply text and nothing else.</li>
-  <li><strong>Bugs get written down.</strong> The changelog records what was found live and what was designed in the quiet, and says which is which. A claim about behavior is only trustworthy if you can see where it was verified.</li>
-</ul>
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+  <div class="section" style="margin-top:0;">
+    <div class="section-head">
+      <span class="tag">Back of house</span>
+      <h2>What's actually running</h2>
+    </div>
+    <div class="ledger">
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot salsa"></span>Handles a rush, not one line at a time</div>
+        <div class="ledger-desc">When four tables text at once, Ventanita works through all of them in one pass — oldest unanswered first — instead of freezing on whichever chat happened to be on top of the screen.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot verde"></span>Waits for you to finish typing</div>
+        <div class="ledger-desc">If a customer is still composing, Ventanita holds its answer — the same courtesy a person would extend — rather than replying to half a thought.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot salsa"></span>Knows the order's real status</div>
+        <div class="ledger-desc">Every ticket moves through a real lifecycle — <span class="soft">new → preparing → ready → paid</span> — with cancellations tracked as their own outcome, not lost as a typo in a free-text field.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot verde"></span>Tracks how people actually pay</div>
+        <div class="ledger-desc">Cash, transfer, card, or Mercado Pago — recorded per order, alongside each customer's preferred method, so the second link is never a guess.</div>
+      </div>
+      <div class="ledger-row">
+        <div class="ledger-key"><span class="dot salsa"></span>Picks its model, not the other way around</div>
+        <div class="ledger-desc">A model running entirely on the operator's own machine when the order matters more than the polish, or a rented cloud model paid per message when it doesn't — the same stand can switch without touching how it talks to customers.</div>
+      </div>
+    </div>
+  </div>
 
-<p class="foot">Ventanita &mdash; version 0.2.4. Section 1 is grounded in <code>CHANGELOG.md</code>; section 2 is not built. For the argument rather than the facts, see <code>README.md</code> and <code>PITCHDECK.md</code>.</p>
+  <div class="section">
+    <div class="section-head">
+      <span class="tag">Guardrails</span>
+      <h2>What it won't do on its own</h2>
+    </div>
+    <div class="twocol">
+      <table class="spec">
+        <tr><td class="k">KILL SWITCH</td><td class="v">One key stops every reply mid-type, instantly.</td></tr>
+        <tr><td class="k">SPEND THRESHOLD</td><td class="v">Orders above a set amount wait for a human before anything is charged.</td></tr>
+      </table>
+      <table class="spec">
+        <tr><td class="k">ACTIVE HOURS</td><td class="v">Sleeps outside the hours the stand actually answers a phone.</td></tr>
+        <tr><td class="k">FAIL LOUD</td><td class="v">An unclear order gets one clarifying question — never a guess.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>VENTANITA — PRODUCT OVERVIEW</span>
+    <span class="pg">2 / 3</span>
+    <span>AUTISMLLM</span>
+  </div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div class="page">
+  <div class="section" style="margin-top:0;">
+    <div class="section-head">
+      <span class="tag">Under the hood</span>
+      <h2>Built to be understood by one person</h2>
+    </div>
+    <p style="font-size:14px;line-height:1.6;max-width:640px;color:var(--ink);">
+      Every "AI customer engagement platform" charging $500 a month is running
+      the same idea Ventanita is: read a message, decide what it means, write
+      back. The difference is what's between those two lines. Ventanita keeps
+      it small enough that the person running the stand can still open the
+      file and understand every step — no orchestration layer, no message
+      queue, no vendor to call when it breaks at 9pm on a Friday.
+    </p>
+  </div>
+
+  <div class="section">
+    <table class="spec">
+      <tr><td class="k">RUNTIME</td><td class="v">One process, on the operator's own computer — no cloud account required to keep taking orders.</td></tr>
+      <tr><td class="k">MEMORY</td><td class="v">A single SQLite file. Customers, orders, and conversation history — open it with any database viewer, no server involved.</td></tr>
+      <tr><td class="k">LANGUAGE MODEL</td><td class="v">Swappable behind one seam — a hosted model billed per message, or a local model with no per-message cost at all.</td></tr>
+      <tr><td class="k">PAYMENTS</td><td class="v">Mercado Pago Checkout — a link per order, confirmation matched back to the customer who placed it.</td></tr>
+      <tr><td class="k">VOICE &amp; VISION</td><td class="v">Voice notes transcribed, photos read, replies optionally spoken back.</td></tr>
+      <tr><td class="k">OWNERSHIP</td><td class="v">Every record — every order, every conversation — lives on hardware the operator owns.</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="tag">Why it exists</span>
+      <h2>The toll booth was never necessary</h2>
+    </div>
+    <p style="font-size:14px;line-height:1.6;max-width:640px;color:var(--ink);">
+      A cook can't type and flip tortillas at the same time. That's the whole
+      problem the billion-dollar "conversational commerce" industry charges
+      per message to solve. Ventanita solves it once, on hardware the stand
+      already owns, in a voice that sounds like the stand — not a template
+      Meta pre-approved.
+    </p>
+  </div>
+
+  <div class="footer">
+    <span>VENTANITA — PRODUCT OVERVIEW</span>
+    <span class="pg">3 / 3</span>
+    <span>AUTISMLLM</span>
+  </div>
+</div>
+
+</body>
+</html>
