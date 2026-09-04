@@ -3,7 +3,7 @@ window:
   badge_corner: [0, 0, 20, 20]    # tiny unread-badge crop
   input_pos: [400, 590]           # click point for input field
   chat_list_row: [100, 100, 300, 60]  # fallback row if no badge detected
-  unread_badge_x: 0                 # x-column where the green unread dot appears, from calibrate.py
+  unread_badge_x_range: [0, 40]      # x-band where the green unread dot appears, from calibrate.py
   list_scan_range: [0, 600]         # y-range to scan for it
 timing:
   check_interval_sec: 5

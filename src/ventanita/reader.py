@@ -9,22 +9,31 @@ _BADGE_GREEN = (33, 192, 99)
 _COLOR_TOLERANCE = 30
 
 
-def find_unread_row_y(badge_x, scan_range):
-    """Scan a 1px-wide column for WhatsApp's unread-badge green; return the
-    topmost match's y, or None if no unread badge is visible right now."""
+def find_unread_row_y(badge_x_range, scan_range):
+    """Scan a small x-range column for WhatsApp's unread-badge green; return
+    the topmost match's y, or None if no unread badge is visible right now.
+
+    A single exact x doesn't hold: WhatsApp shifts the badge left when a row
+    shows its extra dropdown-chevron affordance (observed ~22px), so we scan
+    a band instead of one pixel column.
+    """
+    x_left, x_right = badge_x_range
     top, bottom = scan_range
     with mss.mss() as sct:
-        shot = sct.grab({"left": badge_x, "top": top, "width": 1, "height": bottom - top})
+        shot = sct.grab(
+            {"left": x_left, "top": top, "width": x_right - x_left, "height": bottom - top}
+        )
         img = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")
 
     for y in range(img.height):
-        r, g, b = img.getpixel((0, y))
-        if (
-            abs(r - _BADGE_GREEN[0]) < _COLOR_TOLERANCE
-            and abs(g - _BADGE_GREEN[1]) < _COLOR_TOLERANCE
-            and abs(b - _BADGE_GREEN[2]) < _COLOR_TOLERANCE
-        ):
-            return top + y
+        for x in range(img.width):
+            r, g, b = img.getpixel((x, y))
+            if (
+                abs(r - _BADGE_GREEN[0]) < _COLOR_TOLERANCE
+                and abs(g - _BADGE_GREEN[1]) < _COLOR_TOLERANCE
+                and abs(b - _BADGE_GREEN[2]) < _COLOR_TOLERANCE
+            ):
+                return top + y
     return None
 
 

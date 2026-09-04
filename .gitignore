@@ -2,6 +2,7 @@ config.yaml
 .env
 *.db
 *.log
+*.log.*
 __pycache__/
 *.pyc
 .venv/

@@ -44,14 +44,17 @@ def main():
     cx2, cy2 = _wait_click("Bottom-right of chat row")
     chat_list_row = [min(cx1, cx2), min(cy1, cy2), abs(cx2 - cx1), abs(cy2 - cy1)]
 
-    print("\n8) Hover the CENTER of the small green unread-count dot on any chat row "
-          "(the real one moves per-chat -- we just need its x-column).")
-    ux, _uy = _wait_click("Center of an unread dot")
-    unread_badge_x = ux
+    print("\n8) Hover the LEFT edge of where the small green unread-count dot could "
+          "appear on a chat row (it shifts ~20px when a row shows its dropdown chevron "
+          "-- give it a generous band).")
+    ux1, _uy1 = _wait_click("Left edge of unread-dot band")
+    print("9) Hover the RIGHT edge of that same band.")
+    ux2, _uy2 = _wait_click("Right edge of unread-dot band")
+    unread_badge_x_range = [min(ux1, ux2), max(ux1, ux2)]
 
-    print("\n9) Hover the TOP of the visible chat list (below the search bar).")
+    print("\n10) Hover the TOP of the visible chat list (below the search bar).")
     _sx, sy_top = _wait_click("Top of chat list")
-    print("10) Hover the BOTTOM of the visible chat list.")
+    print("11) Hover the BOTTOM of the visible chat list.")
     _sx2, sy_bottom = _wait_click("Bottom of chat list")
     list_scan_range = [min(sy_top, sy_bottom), max(sy_top, sy_bottom)]
 
@@ -66,7 +69,7 @@ def main():
     config["window"]["badge_corner"] = badge_corner
     config["window"]["input_pos"] = input_pos
     config["window"]["chat_list_row"] = chat_list_row
-    config["window"]["unread_badge_x"] = unread_badge_x
+    config["window"]["unread_badge_x_range"] = unread_badge_x_range
     config["window"]["list_scan_range"] = list_scan_range
 
     with open(CONFIG_PATH, "w") as f:

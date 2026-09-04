@@ -54,8 +54,8 @@ def run():
 
         if trigger.badge_changed(win["badge_corner"]):
             row_y = None
-            if win.get("unread_badge_x") is not None and win.get("list_scan_range"):
-                row_y = reader.find_unread_row_y(win["unread_badge_x"], win["list_scan_range"])
+            if win.get("unread_badge_x_range") and win.get("list_scan_range"):
+                row_y = reader.find_unread_row_y(win["unread_badge_x_range"], win["list_scan_range"])
 
             allowed_chats = config["safety"].get("allowed_chats")
             if allowed_chats and row_y is not None:
