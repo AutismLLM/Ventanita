@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS menu (
     price REAL,
     available INTEGER
 );
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer TEXT,
+    role TEXT,
+    content TEXT,
+    ts TEXT
+);
 """
 
 
@@ -48,6 +55,28 @@ def get_or_create_customer(conn, number, name=""):
     )
     conn.commit()
     return (number, name, _now(), "")
+
+
+def update_customer_notes(conn, number, notes):
+    conn.execute("UPDATE customers SET notes = ? WHERE number = ?", (notes, number))
+    conn.commit()
+
+
+def add_message(conn, customer, role, content):
+    conn.execute(
+        "INSERT INTO messages (customer, role, content, ts) VALUES (?, ?, ?, ?)",
+        (customer, role, content, _now()),
+    )
+    conn.commit()
+
+
+def recent_messages(conn, customer, n=20):
+    """Last n turns, oldest first -- ready to drop straight into an LLM messages array."""
+    rows = conn.execute(
+        "SELECT role, content FROM messages WHERE customer = ? ORDER BY ts DESC LIMIT ?",
+        (customer, n),
+    ).fetchall()
+    return list(reversed(rows))
 
 
 def recent_orders(conn, number, n=3):

@@ -13,19 +13,28 @@ _SYSTEM_PROMPT = (
 )
 
 
-def _build_prompt(message, customer_ctx, menu):
+def _build_system_content(customer_ctx, menu, recent_context=""):
     menu_lines = "\n".join(f"- {item}: ${price}" for item, price in menu)
     history_lines = "\n".join(
         f"- {items} ({status})" for items, status, _ts in customer_ctx
     )
+    context_block = (
+        f"\nRecent chat on screen (OCR'd — may have noise):\n{recent_context}\n"
+        if recent_context else ""
+    )
     return (
+        f"{_SYSTEM_PROMPT}\n\n"
         f"Menu:\n{menu_lines}\n\n"
-        f"Customer's recent orders:\n{history_lines or '(none)'}\n\n"
-        f"Customer says: {message}"
+        f"Customer's order history:\n{history_lines or '(none)'}\n"
+        f"{context_block}"
     )
 
 
-def reply(message, customer_ctx, menu, llm_config=None):
+def reply(message, customer_ctx, menu, llm_config=None, recent_context="", message_history=None):
+    """message_history: prior (role, content) turns for this customer, oldest first,
+    NOT including the current `message` — this call appends it. Replaying the real
+    turn history each call is what makes a stateless API feel like one continuous
+    session per customer."""
     llm_config = llm_config or {}
     provider = llm_config.get("provider", os.environ.get("VENTANITA_LLM_PROVIDER", "openai"))
     model = llm_config.get("model", os.environ.get("VENTANITA_LLM_MODEL", "gpt-5.6-terra"))
@@ -34,7 +43,10 @@ def reply(message, customer_ctx, menu, llm_config=None):
     if not api_key:
         raise RuntimeError(f"Missing LLM API key: expected env var {api_key_env}")
 
-    prompt = _build_prompt(message, customer_ctx, menu)
+    messages = [{"role": "system", "content": _build_system_content(customer_ctx, menu, recent_context)}]
+    for role, content in (message_history or []):
+        messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": message})
 
     if provider == "openai":
         resp = requests.post(
@@ -42,10 +54,7 @@ def reply(message, customer_ctx, menu, llm_config=None):
             headers={"Authorization": f"Bearer {api_key}"},
             json={
                 "model": model,
-                "messages": [
-                    {"role": "system", "content": _SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt},
-                ],
+                "messages": messages,
                 "max_completion_tokens": 200,
             },
             timeout=20,

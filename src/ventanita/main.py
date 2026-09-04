@@ -1,5 +1,6 @@
 """main.py — the loop. badge goes up -> click chat -> read text -> think -> type reply -> loop."""
 import logging
+import logging.handlers
 import time
 from datetime import datetime
 
@@ -24,12 +25,14 @@ def in_active_hours(active_hours):
 def run():
     load_dotenv(override=True)
     config = load_config()
-    logging.basicConfig(
-        filename=config["paths"]["log"],
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
-    )
     log = logging.getLogger("ventanita")
+    log.setLevel(logging.INFO)
+    # Rotate at midnight, keep a week of history -- logs shouldn't grow forever.
+    handler = logging.handlers.TimedRotatingFileHandler(
+        config["paths"]["log"], when="midnight", backupCount=7
+    )
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    log.addHandler(handler)
 
     conn = db.connect(config["paths"]["db"])
     db.seed_menu_from_file(conn, config["paths"]["menu"])
@@ -52,9 +55,13 @@ def run():
 
             customer = db.get_or_create_customer(conn, msg.number, msg.name)
             history = db.recent_orders(conn, msg.number)
+            message_history = db.recent_messages(conn, msg.number)
             menu = db.active_menu(conn)
+            db.add_message(conn, msg.number, "user", msg.text)
 
-            reply_text = brain.reply(msg.text, history, menu, config["llm"])
+            reply_text = brain.reply(
+                msg.text, history, menu, config["llm"], msg.recent_context, message_history
+            )
             ok, reason = gate.should_send(reply_text, msg, config)
 
             if ok:
@@ -67,6 +74,7 @@ def run():
                 if sent:
                     if msg.item:
                         db.add_order(conn, msg.number, f"{msg.qty} {msg.item} {msg.note}".strip())
+                    db.add_message(conn, msg.number, "assistant", reply_text)
                     log.info("Sent reply to %s: %s", msg.number, reply_text)
                 else:
                     log.warning("Kill switch aborted send to %s", msg.number)

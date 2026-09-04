@@ -1,5 +1,6 @@
 """hands.py — "type like a human." Kill switch aborts mid-message, no exceptions."""
 import random
+import subprocess
 import time
 import threading
 
@@ -34,7 +35,9 @@ def type_and_send(text, input_pos, think_delay, type_jitter):
     for ch in text:
         if _kill_flag.is_set():
             return False
-        pyautogui.write(ch)
+        # pyautogui.write() silently drops/mangles non-ASCII chars (é, ñ, emoji) on X11.
+        # xdotool type handles UTF-8 correctly via XTest.
+        subprocess.run(["xdotool", "type", "--clearmodifiers", "--", ch], check=False)
         time.sleep(random.uniform(*type_jitter))
 
     if _kill_flag.is_set():

@@ -14,6 +14,9 @@ _QTY_ITEM_RE = re.compile(
 )
 
 
+_CONTEXT_LINES = 8
+
+
 @dataclass
 class Message:
     number: str
@@ -22,6 +25,7 @@ class Message:
     item: str = ""
     qty: int = 0
     note: str = ""
+    recent_context: str = ""
 
 
 def clean(raw_text, number="unknown", name="unknown"):
@@ -32,8 +36,9 @@ def clean(raw_text, number="unknown", name="unknown"):
     lines = [l for l in lines if l]
 
     latest = lines[-1] if lines else ""
+    recent_context = "\n".join(lines[-_CONTEXT_LINES:])
 
-    msg = Message(number=number, name=name, text=latest)
+    msg = Message(number=number, name=name, text=latest, recent_context=recent_context)
 
     match = _QTY_ITEM_RE.search(latest.lower())
     if match:

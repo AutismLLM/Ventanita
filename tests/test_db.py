@@ -26,3 +26,26 @@ def test_seed_menu_is_idempotent(tmp_path):
     db.seed_menu_from_file(conn, str(menu_file))
     db.seed_menu_from_file(conn, str(menu_file))
     assert len(db.active_menu(conn)) == 1
+
+
+def test_message_history_roundtrip_is_oldest_first():
+    conn = db.connect(":memory:")
+    db.add_message(conn, "5219991234567", "user", "hola")
+    db.add_message(conn, "5219991234567", "assistant", "qué onda")
+    db.add_message(conn, "5219991234567", "user", "2 al pastor")
+
+    turns = db.recent_messages(conn, "5219991234567")
+    assert turns == [
+        ("user", "hola"),
+        ("assistant", "qué onda"),
+        ("user", "2 al pastor"),
+    ]
+
+
+def test_recent_messages_respects_limit():
+    conn = db.connect(":memory:")
+    for i in range(5):
+        db.add_message(conn, "123", "user", f"msg{i}")
+
+    turns = db.recent_messages(conn, "123", n=2)
+    assert [content for _role, content in turns] == ["msg3", "msg4"]
