@@ -1,0 +1,156 @@
+<title>Ventanita Tech Overview</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    max-width: 46em;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 20pt;
+    margin: 0 0 2px 0;
+    letter-spacing: 0.5px;
+  }
+  .sub { color: #555; font-size: 10pt; margin: 0 0 4px 0; }
+  .meta {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 8.5pt;
+    color: #666;
+    border-bottom: 1.5px solid #1a1a1a;
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+  }
+  h2 {
+    font-size: 13pt;
+    margin: 22px 0 8px 0;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #bbb;
+  }
+  h3 { font-size: 10.5pt; margin: 14px 0 4px 0; }
+  p { margin: 0 0 8px 0; }
+  ul { margin: 0 0 8px 0; padding-left: 1.1em; }
+  li { margin-bottom: 5px; }
+  code, .mono {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 9pt;
+  }
+  .flow {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 9pt;
+    background: #f4f4f2;
+    border-left: 3px solid #999;
+    padding: 8px 10px;
+    margin: 10px 0 12px 0;
+  }
+  .roadmap {
+    border: 1.5px solid #1a1a1a;
+    padding: 12px 14px 6px 14px;
+    margin-top: 6px;
+    background: #fbfaf7;
+  }
+  .stamp {
+    display: inline-block;
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 1px;
+    border: 1.5px solid #1a1a1a;
+    padding: 2px 7px;
+    margin-bottom: 8px;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6px 0 10px 0; }
+  th, td { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid #ddd; vertical-align: top; }
+  th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+  .foot {
+    margin-top: 22px;
+    padding-top: 8px;
+    border-top: 1px solid #bbb;
+    font-size: 9pt;
+    color: #555;
+  }
+  .avoid-break { break-inside: avoid; }
+</style>
+
+<h1>Ventanita</h1>
+<p class="sub">A WhatsApp order-taking bot for a small food business. No official API, no framework, no vendor.</p>
+<p class="meta">Technical overview &middot; v0.2.4 &middot; What is shipped, and where it is going</p>
+
+<h2>1. What it is</h2>
+
+<p>Ventanita is a Python program that watches a WhatsApp Web browser window on a machine you own, reads it with OCR, and types replies back with real keystrokes. It is not an integration. It does not talk to Meta's Business API, does not register templates, and does not pay per message. It uses the same door a human uses: a linked browser session, a screen, and a keyboard.</p>
+
+<div class="flow">unread badge &rarr; open chat &rarr; OCR &rarr; clean &rarr; look up customer &rarr; ask LLM &rarr; gate &rarr; type &rarr; close chat &rarr; loop</div>
+
+<p>That is the whole architecture. Eight small modules, one job each, under <code>src/ventanita/</code>. The LLM is the only stochastic part; everything around it is if/then, so a wrong answer is traceable to one variable.</p>
+
+<h3>Shipped through v0.2.4</h3>
+<ul>
+  <li><strong>Screen-driven detection.</strong> The chat list is scanned for WhatsApp's unread-badge green. Badge position is not fixed &mdash; it shifts a couple of dozen pixels on the row showing the dropdown chevron &mdash; so the scan covers an x-band, not one column.</li>
+  <li><strong>Drain loop for concurrent chats.</strong> Every visible unread row is found, not just the topmost. The bot opens one, replies or skips, closes it, then rescans from scratch before touching the next, because sending a message reorders the list and invalidates every y-coordinate. Bounded per pass by <code>safety.max_chats_per_drain</code> (default 4).</li>
+  <li><strong>Real per-chat multi-turn memory.</strong> A <code>messages</code> table stores each customer's turns; they are replayed to the model as a proper messages array. Verified live on a follow-up question that only made sense with prior context.</li>
+  <li><strong>Session-summary memory.</strong> Replaying full history forever gets expensive and stale. After a quiet gap (<code>timing.session_gap_hours</code>, default 3), the turns since the last note are folded into a short written note (capped at 600 characters) by one cheap model call, and that note accumulates rather than being overwritten. New replies then see the current session's turns plus the note. No cron, no background thread &mdash; it is a check at the top of the existing per-chat path.</li>
+  <li><strong>Typing-aware debounce.</strong> If the chat row reads "typing" / "escribiendo" after the chat is opened, the bot waits (up to <code>timing.typing_wait_sec</code>, default 15) and re-reads, so it answers the finished thought instead of half a sentence.</li>
+  <li><strong>Per-chat identity and dedup.</strong> The OCR'd row label is the customer key, so histories no longer collapse into one record. Before spending an LLM call, the latest inbound line is compared against the last stored one; an unchanged re-read is closed without a reply.</li>
+  <li><strong>Orders and payment status in SQLite.</strong> Four tables in one file. <code>orders.status</code> has a fixed vocabulary (<code>new &rarr; preparing &rarr; ready &rarr; paid</code>, plus <code>cancelled</code>) enforced at the write, so typos cannot invent a fifth state. Orders record how they were paid; customers record a preferred method. Migrations are guarded <code>ALTER TABLE</code> statements on connect &mdash; additive only, no migration framework.</li>
+  <li><strong>Chilango-Spanish persona.</strong> Voice comes from the config-supplied system prompt, so per-brand is per-config file.</li>
+  <li><strong>Safety rails.</strong> F9 kill switch (X11 hooks, no root needed) aborts typing mid-message and refuses further sends until restart. A human gate holds orders above a configured peso threshold instead of confirming them. Active-hours sleep, randomized think delays, per-character typing jitter, and a chat allowlist. Failures log loudly rather than passing silently.</li>
+</ul>
+
+<h3>What it runs on</h3>
+<table>
+  <tr><th>Layer</th><th>Choice</th></tr>
+  <tr><td>Language</td><td>Python 3.11+</td></tr>
+  <tr><td>Screen capture / OCR</td><td><code>mss</code> + Tesseract via <code>pytesseract</code> (Spanish pack)</td></tr>
+  <tr><td>Input</td><td><code>pyautogui</code> for clicks, <code>xdotool type</code> for text (pyautogui mangles accents on X11)</td></tr>
+  <tr><td>Storage</td><td><code>sqlite3</code>, stdlib, one file</td></tr>
+  <tr><td>Model</td><td>One HTTP call behind one function &mdash; swap the provider without touching anything else</td></tr>
+  <tr><td>Config</td><td><code>config.yaml</code> plus <code>.env</code> for keys</td></tr>
+</table>
+
+<p>Setup is an afternoon: install Tesseract, <code>pip install -e .</code>, run the calibration helper once with the WhatsApp window pinned, start the loop. Running cost is cents a day in tokens. Everything &mdash; customers, orders, message history &mdash; lives in one file on the operator's disk.</p>
+
+<h3>Known limits, stated plainly</h3>
+<ul>
+  <li>OCR never yields a phone number, so the display name is the identity key. Two contacts with the same name share a record; a misread name splits one. Documented, not solved.</li>
+  <li>The window must stay pinned at a fixed position, size, and zoom. If it moves, recalibrate.</li>
+  <li>The typing-wait is synchronous, so a burst of chats can queue behind each other. Accepted tradeoff for a single-window bot.</li>
+  <li>Nothing in the OCR loop can observe that a payment happened. Payment fields exist and are written by hand or by an operator command &mdash; there is no gateway code.</li>
+  <li>The 0.2.2&ndash;0.2.4 work came from a research pass between live sessions, not from watching it misbehave. Treat those defaults as first guesses until the next real run says otherwise.</li>
+</ul>
+
+<h2>2. Where it is going</h2>
+
+<div class="roadmap">
+<span class="stamp">ROADMAP &mdash; NOT BUILT</span>
+
+<p>Nothing in this section exists in the code today. These are directions, not commitments, and none of them has a date. The project's rule has been to build the atom first and leave the seams: a feature ships when a real kitchen has hit the edge case, not when it sounds good on a page. Read section 1 for what actually runs.</p>
+
+<h3 class="avoid-break">Payment links that close the loop</h3>
+<p>Generate a Mercado Pago link for an order, attach it to that order row, and route the confirmation back to the right customer's chat when it settles. The naming is already in place &mdash; <code>mercado_pago</code> is one of the recorded payment methods today &mdash; so hand-entered rows keep the same label a real integration would use. The hard part is not the link. It is the return path: a webhook or poller has to identify which chat to notify, and the bot's only handle on a customer is an OCR'd display name. That identity problem is upstream of the payment work.</p>
+
+<h3 class="avoid-break">Understanding voice notes and photos</h3>
+<p>Customers send audio and pictures, not only typed text. Today OCR sees a bubble it cannot read, and the bot has nothing to say about it. The intended shape is transcription for audio and a small vision model on call for images &mdash; invoked only when the message is not plain text, feeding a description into the same prompt path that already exists, rather than becoming a second pipeline.</p>
+
+<h3 class="avoid-break">Spoken replies</h3>
+<p>Answering a voice note with a voice note. Mechanically this is text-to-speech plus WhatsApp Web's attachment flow driven the same way typing is driven now. Open question is whether a synthetic voice is the right thing to put in front of a customer at all; that gets decided by trying it in the sandbox chat, not by arguing about it.</p>
+
+<h3 class="avoid-break">Local model or rented model, operator's choice</h3>
+<p>The model already sits behind one function, which was the point. The direction is making a fully local model a first-class option &mdash; on-machine inference, no cloud dependency, no key, no per-token bill &mdash; while keeping pay-per-use against a cloud provider for operators who would rather rent quality than run hardware. Same code path, one config line. The brain is rented on purpose so it can stop being rented.</p>
+
+<h3 class="avoid-break">Supervision console</h3>
+<p>A read-mostly view of chats, orders, and payment status, and the place a human marks an order paid or ready. This is the intended caller for the payment helpers that already exist in the database layer but have no trigger. Design notes only so far.</p>
+</div>
+
+<h2>3. Why it is built this way</h2>
+<ul>
+  <li><strong>Boring tech owns its failures.</strong> OCR, SQLite, and mouse events have twenty years of known failure modes. When they break, you fix it yourself in four minutes. Cloud APIs break on someone else's schedule.</li>
+  <li><strong>Freeze the world.</strong> Pinned window, fixed resolution, dark mode, 100% zoom. Perception becomes data entry instead of computer vision. Make the environment dumber rather than the model smarter.</li>
+  <li><strong>The AI is a part, not the product.</strong> One replaceable component inside a deterministic box. The stochastic thing touches the reply text and nothing else.</li>
+  <li><strong>Bugs get written down.</strong> The changelog records what was found live and what was designed in the quiet, and says which is which. A claim about behavior is only trustworthy if you can see where it was verified.</li>
+</ul>
+
+<p class="foot">Ventanita &mdash; version 0.2.4. Section 1 is grounded in <code>CHANGELOG.md</code>; section 2 is not built. For the argument rather than the facts, see <code>README.md</code> and <code>PITCHDECK.md</code>.</p>

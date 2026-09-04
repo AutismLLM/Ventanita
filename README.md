@@ -1,6 +1,6 @@
 VENTANITA
 
-Open-sourcing a billion-dollar industry with a few hundred lines of code your intern could write. Started as a 300-line napkin idea, keeps growing as real kitchens hit real edge cases — check `ventanita/` for the current count, this number goes stale fast.
+Open-sourcing a billion-dollar industry with a few hundred lines of code your intern could write. Started as a 300-line napkin idea, keeps growing as real kitchens hit real edge cases — 1,074 lines as of this writing (`./scripts/count_loc.sh` prints the real number; this one goes stale the moment someone commits).
 
 ---
 
