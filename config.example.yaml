@@ -11,10 +11,13 @@ timing:
   type_jitter: [0.03, 0.12]       # per-char delay
   post_send_pause: [10, 60]       # once per drain (after the whole batch), not per chat
   active_hours: [8, 22]           # sleep outside this
+  session_gap_hours: 3            # customer quiet this long = new session: older turns fold into a short note instead of raw replay. Omit = 3.
+  typing_wait_sec: 15             # max wait while a row shows "typing..." before answering anyway. Adds up per chat in a burst; keep short. Omit = 15.
 llm:
   provider: openai                # or anthropic / local
   model: gpt-5.6-terra             # balanced tier: catches menu mismatches, doesn't guess.
                                     # gpt-5.6-luna = cheaper/faster if volume gets high; sol = overkill for taco orders.
+  summary_model: gpt-5.6-luna      # cheap tier for folding an old session into the customer note. Omit = gpt-5.6-luna.
   api_key_env: OPENAI_API_KEY      # actual key lives in .env, never in this file or git
 paths:
   db: ./ventanita.db

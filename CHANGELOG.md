@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.2.3
+Built proactively from a feature request, not from a bug seen live (same
+footing as 0.2.2, unlike 0.2/0.2.1). Neither piece has been through a real
+session yet; treat the defaults as first guesses.
+
+- **Session memory: summarize after a 3-hour gap instead of replaying
+  everything forever.** `_handle_chat()` used to feed a customer's last 20
+  raw turns into every reply, for life. Now it remembers the way a person
+  remembers a regular: the *current* conversation turn by turn, older ones
+  as a short written note. A customer going quiet for
+  `timing.session_gap_hours` (default 3, works without the key) ends a
+  session; their next message first folds every turn since the note was
+  last written -- together with the previous note, so it accumulates and
+  evolves instead of being overwritten -- into a fresh note via one cheap
+  inline LLM call (`brain.summarize_session`, `llm.summary_model`, default
+  `gpt-5.6-luna`), stored through the previously-unused
+  `db.update_customer_notes()`. Notes are capped at 600 chars
+  (`brain.NOTE_MAX_CHARS`). The reply call then gets only the session's
+  turns plus a "lo que recuerdas de este cliente" block in the system
+  prompt. No background job, cron, or thread: it is a check at the top of
+  the existing per-chat path.
+- `customers` gains a `notes_ts` column (guarded `ALTER TABLE` on connect,
+  so an existing `ventanita.db` migrates itself). It marks both when the
+  note was written and where the current session's raw replay starts. A
+  failed summary call leaves it alone and replays raw history as before --
+  the customer still gets their reply and the next boundary retries.
+- **Typing-aware debounce: don't answer mid-sentence.** The chat-list row
+  reads "typing..." while the contact is composing (observed live). After
+  opening and reading a chat, `_handle_chat()` now re-OCRs that row; if it
+  shows the indicator it waits (3s polls) until it clears or
+  `timing.typing_wait_sec` (default 15) runs out, then re-reads the chat
+  once so the reply is to the finished thought. Matches "typing" and
+  "escribiendo" case-insensitively (`reader.is_typing`). Honest tradeoff:
+  the wait is synchronous, so a burst of chats can each add up to the cap
+  on top of their own think/typing time -- accepted over real concurrency
+  for a single-window bot; keep the cap short. Costs one extra small
+  row OCR per chat even when nobody is typing.
+- `db.get_or_create_customer()` now returns a 5-tuple
+  `(number, name, first_seen, notes, notes_ts)`; `brain.reply()` takes a
+  `notes` kwarg; the HTTP call moved into one `brain._chat()` helper so
+  both LLM uses share the provider/key plumbing.
+
 ## 0.2.2
 Builds out the "known limitation" left open in 0.2.1. Unlike 0.2/0.2.1
 these were not caught misbehaving live; they came from a research pass

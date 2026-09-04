@@ -75,6 +75,21 @@ def find_unread_row_y(badge_x_range, scan_range, row_height=1):
     return rows[0] if rows else None
 
 
+_TYPING_MARKERS = ("typing", "escribiendo")
+
+
+def is_typing(row_label):
+    """True if an OCR'd chat-list row shows WhatsApp's composing indicator.
+
+    While the contact is composing, the row's preview line reads "typing..."
+    (English UI) or "escribiendo..." (Spanish UI) instead of the last
+    message -- observed live as "Nico ... typing...". Case-insensitive
+    substring match; OCR drops or mangles the ellipsis, so we don't rely on it.
+    """
+    label = row_label.lower()
+    return any(marker in label for marker in _TYPING_MARKERS)
+
+
 def read_row_label(chat_list_row, row_y):
     """OCR just the row at row_y (name + timestamp + snippet) -- used to check
     an unread chat against an allowlist, and as the chat's identity, before

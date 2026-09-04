@@ -137,6 +137,13 @@ def _handle_chat(conn, config, row_y, row_label):
     name, key = parser.identity_from_label(row_label)
 
     raw = reader.last_messages(win["region"], win["chat_list_row"], row_y=row_y)
+
+    # Don't answer mid-sentence. If the row still says "typing..." wait a
+    # little (bounded) and then re-read the chat so the reply is to the
+    # finished thought, not to the snapshot taken while they were composing.
+    if _wait_while_typing(win, row_y, timing.get("typing_wait_sec", 15)):
+        raw = reader.last_messages(win["region"], win["chat_list_row"], row_y=row_y)
+
     msg = parser.clean(raw, number=key, name=name)
 
     if not msg.text:
@@ -152,14 +159,15 @@ def _handle_chat(conn, config, row_y, row_label):
         hands.close_chat()
         return False
 
-    db.get_or_create_customer(conn, key, name)
     history = db.recent_orders(conn, key)
-    message_history = db.recent_messages(conn, key)
+    notes, message_history = _remember(
+        conn, key, name, config["llm"], timing.get("session_gap_hours", 3)
+    )
     menu = db.active_menu(conn)
     db.add_message(conn, key, "user", msg.text)
 
     reply_text = brain.reply(
-        msg.text, history, menu, config["llm"], msg.recent_context, message_history
+        msg.text, history, menu, config["llm"], msg.recent_context, message_history, notes
     )
     ok, reason = gate.should_send(reply_text, msg, config)
 
@@ -192,6 +200,62 @@ def _handle_chat(conn, config, row_y, row_label):
     if not killswitch_aborted:
         hands.close_chat()
     return sent
+
+
+def _remember(conn, key, name, llm_config, gap_hours):
+    """What we know about this customer right now, as (notes, session_turns).
+
+    Memory works like a person's: the CURRENT conversation is recalled turn
+    by turn, older ones survive only as a short written note. A session ends
+    when the customer goes quiet for gap_hours; the first message after that
+    gap folds everything since the note was last written into a fresh note
+    (one cheap LLM call, inline, no background job) and the raw replay
+    starts over from empty.
+
+    If that summary call fails the note is left alone and the unfolded turns
+    are replayed raw as before -- a customer must never lose their reply to a
+    bookkeeping error. The next boundary simply tries again with the same
+    turns, since notes_ts only moves when a note is actually written.
+    """
+    _number, _name, _seen, notes, notes_ts = db.get_or_create_customer(conn, key, name)
+    turns = db.messages_since(conn, key, notes_ts)
+    last_ts = db.last_user_message_ts(conn, key)
+
+    if turns and last_ts and db.hours_between(last_ts, db.now()) >= gap_hours:
+        try:
+            notes = brain.summarize_session(notes or "", turns, llm_config)
+            db.update_customer_notes(conn, key, notes)
+            log.info("Folded %d turns from %s into note: %s", len(turns), key, notes)
+            turns = []
+        except Exception as e:  # noqa: BLE001 -- any failure here must not cost the reply
+            log.warning("Session summary failed for %s, replaying raw history: %s", key, e)
+    return notes or "", turns
+
+
+def _wait_while_typing(win, row_y, wait_cap_sec, poll_sec=3):
+    """Poll the chat-list row while it shows "typing..."; returns True if it
+    ever did, meaning the caller should re-read the chat before replying.
+
+    Bounded by wait_cap_sec and then we answer whatever was last read rather
+    than wait forever. Synchronous on purpose: this is a single-window bot
+    and real concurrency would be far more machinery than the problem is
+    worth. The honest cost is that a burst of chats can each add up to the
+    cap on top of their own think/typing time; keep the cap short.
+    """
+    saw_typing = False
+    deadline = time.monotonic() + wait_cap_sec
+    while not hands.killed():
+        label = reader.read_row_label(win["chat_list_row"], row_y)
+        if not reader.is_typing(label):
+            if saw_typing:
+                log.info("Typing stopped, re-reading chat before replying")
+            return saw_typing
+        saw_typing = True
+        if time.monotonic() >= deadline:
+            log.info("Still typing after %ss, replying to what was read", wait_cap_sec)
+            return True
+        time.sleep(poll_sec)
+    return saw_typing
 
 
 if __name__ == "__main__":

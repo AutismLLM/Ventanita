@@ -40,6 +40,14 @@ def test_badge_pixel_rows_ignores_near_miss_colors():
     assert reader.badge_pixel_rows(img) == []
 
 
+def test_is_typing_matches_the_composing_indicator_case_insensitively():
+    assert reader.is_typing("Nico  10:32 PM\ntyping...") is True
+    assert reader.is_typing("Nico\nTyping") is True            # OCR drops the ellipsis
+    assert reader.is_typing("Nico\nescribiendo…") is True      # Spanish UI
+    assert reader.is_typing("Nico  10:32 PM\n2 al pastor sin cebolla") is False
+    assert reader.is_typing("") is False
+
+
 def test_two_badges_two_rows_end_to_end_on_synthetic_image():
     img = _column(300, [(30, 50), (120, 140)])
     rows = reader.cluster_rows(reader.badge_pixel_rows(img), row_height=90)
