@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.2.4
+Built proactively from a feature request ("if order active, some core
+information, preferred payment, last payment used"), same footing as
+0.2.2/0.2.3. Schema and `db.py` helpers only; nothing in the reply path
+changed, so the live bot behaves exactly as before after restart.
+
+- **Order status means something now.** `orders.status` was always `"new"`.
+  Fixed vocabulary in `db.ORDER_STATUSES`: `new -> preparing -> ready ->
+  paid`, with `cancelled` as the only other exit; `add_order()` and
+  `update_status()` reject anything else with a `ValueError` rather than
+  letting typos become a fourth state. `db.open_order(conn, customer)`
+  answers "do they have something in flight" as the newest order not in
+  `db.CLOSED_STATUSES` -- a query, not a new column.
+- **Basic payment tracking, manual for now.** `orders` gains
+  `payment_method`, `customers` gains `preferred_payment`, both from
+  `db.PAYMENT_METHODS` (`cash`, `transfer`, `card`, `mercado_pago` -- the
+  last one named now so today's hand-entered "pagó por MP" rows keep the
+  same label a real integration will use). `db.mark_paid(conn, order_id,
+  method)` settles an order (status `paid` + how) in one call;
+  `db.set_preferred_payment()` / `db.preferred_payment()` for the customer's
+  stated preference; `db.last_payment_method()` for what they actually used
+  last time (newest `paid` order). No gateway code, no API calls, and no
+  trigger in `main.py` yet: nothing in the OCR loop can tell a payment
+  happened, so inventing one would be fiction. The console (v0.3) or an
+  operator command is the intended caller.
+- **Last interaction per customer** is derived, not stored:
+  `db.last_interaction_ts(conn, customer)` is `MAX(ts)` over `messages`
+  (either side of the conversation) and `db.last_interactions(conn)` is the
+  grouped version for a chat-list view. A new index on `messages(customer,
+  ts)` makes both cheap, so a denormalized column that costs a write on
+  every message was not worth it.
+- Migration follows the 0.2.3 pattern: guarded `ALTER TABLE ... ADD COLUMN`
+  on connect (factored into `db._add_column`), plus `CREATE INDEX IF NOT
+  EXISTS`. Additive only; an existing `ventanita.db` keeps every row.
+  `db.get_or_create_customer()` still returns the same 5-tuple.
+
 ## 0.2.3
 Built proactively from a feature request, not from a bug seen live (same
 footing as 0.2.2, unlike 0.2/0.2.1). Neither piece has been through a real

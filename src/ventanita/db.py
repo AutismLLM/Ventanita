@@ -1,4 +1,4 @@
-"""db.py — "memory." One SQLite file, three tables, zero server."""
+"""db.py — "memory." One SQLite file, four tables, zero server."""
 import sqlite3
 from datetime import datetime, timezone
 
@@ -8,14 +8,16 @@ CREATE TABLE IF NOT EXISTS customers (
     name TEXT,
     first_seen TEXT,
     notes TEXT,
-    notes_ts TEXT
+    notes_ts TEXT,
+    preferred_payment TEXT
 );
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer TEXT,
     items TEXT,
     status TEXT,
-    ts TEXT
+    ts TEXT,
+    payment_method TEXT
 );
 CREATE TABLE IF NOT EXISTS menu (
     item TEXT,
@@ -29,7 +31,19 @@ CREATE TABLE IF NOT EXISTS messages (
     content TEXT,
     ts TEXT
 );
+CREATE INDEX IF NOT EXISTS messages_customer_ts ON messages (customer, ts);
 """
+
+# How an order moves at a taco stand: taken -> on the plancha -> on the
+# counter -> settled. cancelled is the only other exit. Anything not in
+# CLOSED_STATUSES is still "open" for this customer.
+ORDER_STATUSES = ("new", "preparing", "ready", "paid", "cancelled")
+CLOSED_STATUSES = ("paid", "cancelled")
+
+# How the customer settled (or prefers to settle). Just labels the human
+# records; no gateway is called. mercado_pago is here so today's manual
+# "pagó por MP" entries keep the same name a real integration will use.
+PAYMENT_METHODS = ("cash", "transfer", "card", "mercado_pago")
 
 
 def connect(db_path):
@@ -42,11 +56,17 @@ def connect(db_path):
 
 def _migrate(conn):
     """CREATE TABLE IF NOT EXISTS never adds a column to a table that already
-    exists, so a live ventanita.db from before 0.2.3 has no notes_ts. One
-    guarded ALTER is the whole migration story; no versions table."""
-    cols = {row[1] for row in conn.execute("PRAGMA table_info(customers)")}
-    if "notes_ts" not in cols:
-        conn.execute("ALTER TABLE customers ADD COLUMN notes_ts TEXT")
+    exists, so a live ventanita.db from an older version lacks the newer
+    columns. Guarded ALTERs are the whole migration story; no versions table."""
+    _add_column(conn, "customers", "notes_ts", "TEXT")            # 0.2.3
+    _add_column(conn, "customers", "preferred_payment", "TEXT")   # 0.2.4
+    _add_column(conn, "orders", "payment_method", "TEXT")         # 0.2.4
+
+
+def _add_column(conn, table, column, decl):
+    cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
 def _now():
@@ -146,11 +166,72 @@ def _last_user_row(conn, customer):
     ).fetchone()
 
 
+def last_interaction_ts(conn, customer):
+    """When we last heard from OR replied to this customer (ISO ts), or None.
+    Derived from messages rather than stored on the customer row: the index
+    on (customer, ts) makes MAX(ts) a single lookup, so a denormalized
+    column would be a write on every message for nothing."""
+    (ts,) = conn.execute(
+        "SELECT MAX(ts) FROM messages WHERE customer = ?", (customer,)
+    ).fetchone()
+    return ts
+
+
+def last_interactions(conn):
+    """Every customer with a message, as (customer, last_ts), most recent
+    first -- the one query a chat-list view needs."""
+    return conn.execute(
+        "SELECT customer, MAX(ts) AS last_ts FROM messages "
+        "GROUP BY customer ORDER BY last_ts DESC"
+    ).fetchall()
+
+
 def recent_orders(conn, number, n=3):
     return conn.execute(
         "SELECT items, status, ts FROM orders WHERE customer = ? ORDER BY ts DESC LIMIT ?",
         (number, n),
     ).fetchall()
+
+
+def open_order(conn, customer):
+    """The customer's newest unfinished order as (id, items, status, ts),
+    or None if everything is paid/cancelled. "Do they have something in
+    flight right now" in one call."""
+    marks = ", ".join("?" * len(CLOSED_STATUSES))
+    return conn.execute(
+        f"SELECT id, items, status, ts FROM orders "
+        f"WHERE customer = ? AND status NOT IN ({marks}) "
+        f"ORDER BY ts DESC, id DESC LIMIT 1",
+        (customer, *CLOSED_STATUSES),
+    ).fetchone()
+
+
+def preferred_payment(conn, number):
+    """How this customer likes to pay, or None if never recorded."""
+    row = conn.execute(
+        "SELECT preferred_payment FROM customers WHERE number = ?", (number,)
+    ).fetchone()
+    return row[0] if row else None
+
+
+def set_preferred_payment(conn, number, method):
+    _check(method, PAYMENT_METHODS, "payment method")
+    conn.execute(
+        "UPDATE customers SET preferred_payment = ? WHERE number = ?", (method, number)
+    )
+    conn.commit()
+
+
+def last_payment_method(conn, customer):
+    """Method used on this customer's most recently settled order, or None.
+    Separate from preferred_payment: this is what actually happened last
+    time, that is what they say they like."""
+    row = conn.execute(
+        "SELECT payment_method FROM orders WHERE customer = ? AND status = 'paid' "
+        "ORDER BY ts DESC, id DESC LIMIT 1",
+        (customer,),
+    ).fetchone()
+    return row[0] if row else None
 
 
 def active_menu(conn):
@@ -179,6 +260,7 @@ def seed_menu_from_file(conn, menu_path):
 
 
 def add_order(conn, customer, items, status="new"):
+    _check(status, ORDER_STATUSES, "order status")
     cur = conn.execute(
         "INSERT INTO orders (customer, items, status, ts) VALUES (?, ?, ?, ?)",
         (customer, items, status, _now()),
@@ -188,5 +270,23 @@ def add_order(conn, customer, items, status="new"):
 
 
 def update_status(conn, order_id, status):
+    _check(status, ORDER_STATUSES, "order status")
     conn.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
     conn.commit()
+
+
+def mark_paid(conn, order_id, payment_method):
+    """Settle an order: status -> paid and record how. This is the whole of
+    payment tracking for now -- a human (or later the console) says which
+    method was used; nothing here talks to a gateway."""
+    _check(payment_method, PAYMENT_METHODS, "payment method")
+    conn.execute(
+        "UPDATE orders SET status = 'paid', payment_method = ? WHERE id = ?",
+        (payment_method, order_id),
+    )
+    conn.commit()
+
+
+def _check(value, allowed, what):
+    if value not in allowed:
+        raise ValueError(f"unknown {what} {value!r}; expected one of {allowed}")
