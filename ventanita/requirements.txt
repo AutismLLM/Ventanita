@@ -1,7 +1,0 @@
-mss
-pytesseract
-pyautogui
-pyyaml
-requests
-keyboard
-python-dotenv

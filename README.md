@@ -192,13 +192,14 @@ Sandbox — "Message yourself" chat = test environment. You talk to yourself for
 INSTALL
 
 sudo apt install tesseract-ocr tesseract-ocr-spa
-git clone this repo && cd Ventanita/ventanita
-pip install -r requirements.txt
-cp config.example.yaml config.yaml
-python calibrate.py   # once, with WhatsApp Web pinned and open
-python main.py
+git clone this repo && cd Ventanita
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .
+cp config.example.yaml config.yaml && cp .env.example .env   # then put your real key in .env
+ventanita-calibrate   # once, with WhatsApp Web pinned and open
+ventanita
 
-Six commands. One of them installs the OCR engine, one of them is a calibration wizard you run once. Still no onboarding call.
+Seven commands. One installs the OCR engine, one is a calibration wizard you run once, `pip install -e .` pulls the rest (mss, pytesseract, pyautogui, pyyaml, requests, keyboard, python-dotenv — the whole dependency list, in `pyproject.toml`). Still no onboarding call.
 
 We considered adding a Docker Compose file, a Helm chart, a Terraform module, a GitHub Actions CI pipeline, a CONTRIBUTING.md with a PR template, a CODE_OF_CONDUCT.md, and a SECURITY.md with a responsible disclosure policy.
 

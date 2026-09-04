@@ -6,13 +6,7 @@ from datetime import datetime
 import yaml
 from dotenv import load_dotenv
 
-import db
-import trigger
-import reader
-import parser
-import brain
-import gate
-import hands
+from . import db, trigger, reader, parser, brain, gate, hands
 
 CONFIG_PATH = "config.yaml"
 

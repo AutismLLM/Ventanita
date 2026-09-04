@@ -1,9 +1,12 @@
-ventanita/config.yaml
+config.yaml
 .env
-ventanita/.env
 *.db
 *.log
 __pycache__/
 *.pyc
 .venv/
 .claude/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
