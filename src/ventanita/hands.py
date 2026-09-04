@@ -4,18 +4,24 @@ import time
 import threading
 
 import pyautogui
-import keyboard
+from pynput import keyboard
 
 _kill_flag = threading.Event()
-
-
-def _on_killswitch():
-    _kill_flag.set()
+_listener = None
 
 
 def arm_killswitch(key="f9"):
+    global _listener
     _kill_flag.clear()
-    keyboard.add_hotkey(key, _on_killswitch)
+    target = getattr(keyboard.Key, key, None)
+
+    def _on_press(pressed):
+        if pressed == target:
+            _kill_flag.set()
+
+    _listener = keyboard.Listener(on_press=_on_press)
+    _listener.daemon = True
+    _listener.start()
 
 
 def type_and_send(text, input_pos, think_delay, type_jitter):

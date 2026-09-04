@@ -199,7 +199,9 @@ cp config.example.yaml config.yaml && cp .env.example .env   # then put your rea
 ventanita-calibrate   # once, with WhatsApp Web pinned and open
 ventanita
 
-Seven commands. One installs the OCR engine, one is a calibration wizard you run once, `pip install -e .` pulls the rest (mss, pytesseract, pyautogui, pyyaml, requests, keyboard, python-dotenv — the whole dependency list, in `pyproject.toml`). Still no onboarding call.
+Seven commands. One installs the OCR engine, one is a calibration wizard you run once, `pip install -e .` pulls the rest (mss, pytesseract, pyautogui, pyyaml, requests, pynput, python-dotenv — the whole dependency list, in `pyproject.toml`). Still no onboarding call.
+
+Kill switch note: we tried the obvious `keyboard` package first — on Linux it needs raw root access to `/dev/input`, which is the wrong ask for a long-running network process. `pynput` hooks X11 instead and needs no special privilege. Same F9-stops-everything behavior, no `sudo`.
 
 We considered adding a Docker Compose file, a Helm chart, a Terraform module, a GitHub Actions CI pipeline, a CONTRIBUTING.md with a PR template, a CODE_OF_CONDUCT.md, and a SECURITY.md with a responsible disclosure policy.
 

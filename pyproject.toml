@@ -15,7 +15,7 @@ dependencies = [
     "pyautogui",
     "pyyaml",
     "requests",
-    "keyboard",
+    "pynput",
     "python-dotenv",
 ]
 
