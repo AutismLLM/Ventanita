@@ -53,7 +53,19 @@ def run():
             continue
 
         if trigger.badge_changed(win["badge_corner"]):
-            raw = reader.last_messages(win["region"], win["chat_list_row"])
+            row_y = None
+            if win.get("unread_badge_x") is not None and win.get("list_scan_range"):
+                row_y = reader.find_unread_row_y(win["unread_badge_x"], win["list_scan_range"])
+
+            allowed_chats = config["safety"].get("allowed_chats")
+            if allowed_chats and row_y is not None:
+                row_label = reader.read_row_label(win["chat_list_row"], row_y)
+                if not any(name.lower() in row_label.lower() for name in allowed_chats):
+                    log.info("Skipped unread chat not in allowlist: %r", row_label.strip()[:80])
+                    time.sleep(timing["check_interval_sec"])
+                    continue
+
+            raw = reader.last_messages(win["region"], win["chat_list_row"], row_y=row_y)
             msg = parser.clean(raw, number="self-chat", name="self")
 
             customer = db.get_or_create_customer(conn, msg.number, msg.name)

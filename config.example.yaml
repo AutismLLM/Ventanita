@@ -2,7 +2,9 @@ window:
   region: [0, 0, 800, 600]        # chat area rectangle, from calibrate.py
   badge_corner: [0, 0, 20, 20]    # tiny unread-badge crop
   input_pos: [400, 590]           # click point for input field
-  chat_list_row: [100, 100, 300, 60]  # row to click when badge appears
+  chat_list_row: [100, 100, 300, 60]  # fallback row if no badge detected
+  unread_badge_x: 0                 # x-column where the green unread dot appears, from calibrate.py
+  list_scan_range: [0, 600]         # y-range to scan for it
 timing:
   check_interval_sec: 5
   think_delay: [3, 15]            # random range before reply
@@ -22,3 +24,4 @@ safety:
   max_reply_chars: 320
   confirm_above_mxn: 500           # human gate threshold
   killswitch_key: f9
+  allowed_chats: []                 # e.g. ["Nico"] to restrict replies to matching chats during testing. Empty = reply to any unread chat.

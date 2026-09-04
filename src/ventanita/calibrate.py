@@ -38,11 +38,22 @@ def main():
     ix, iy = _wait_click("Input field")
     input_pos = [ix, iy]
 
-    print("\n6) Hover the TOP-LEFT of the chat row you want to auto-click.")
+    print("\n6) Hover the TOP-LEFT of a chat row (fallback if no unread badge is found).")
     cx1, cy1 = _wait_click("Top-left of chat row")
     print("7) Hover the BOTTOM-RIGHT of that same chat row.")
     cx2, cy2 = _wait_click("Bottom-right of chat row")
     chat_list_row = [min(cx1, cx2), min(cy1, cy2), abs(cx2 - cx1), abs(cy2 - cy1)]
+
+    print("\n8) Hover the CENTER of the small green unread-count dot on any chat row "
+          "(the real one moves per-chat -- we just need its x-column).")
+    ux, _uy = _wait_click("Center of an unread dot")
+    unread_badge_x = ux
+
+    print("\n9) Hover the TOP of the visible chat list (below the search bar).")
+    _sx, sy_top = _wait_click("Top of chat list")
+    print("10) Hover the BOTTOM of the visible chat list.")
+    _sx2, sy_bottom = _wait_click("Bottom of chat list")
+    list_scan_range = [min(sy_top, sy_bottom), max(sy_top, sy_bottom)]
 
     try:
         with open(CONFIG_PATH) as f:
@@ -55,6 +66,8 @@ def main():
     config["window"]["badge_corner"] = badge_corner
     config["window"]["input_pos"] = input_pos
     config["window"]["chat_list_row"] = chat_list_row
+    config["window"]["unread_badge_x"] = unread_badge_x
+    config["window"]["list_scan_range"] = list_scan_range
 
     with open(CONFIG_PATH, "w") as f:
         yaml.safe_dump(config, f, sort_keys=False)
